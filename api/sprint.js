@@ -169,6 +169,33 @@ function AgileSprintClient(jiraClient) {
     return this.jiraClient.makeRequest(options, callback);
   };
 
+
+  /**
+   * Return sprint health gadget.
+   *
+   * @method getSprintHealth
+   * @memberOf AgileSprintClient#
+   * @param {Object} opts The request options sent to the Jira API.
+   * @param opts.sprintId The sprint id.
+   * @param opts.boardId The board id.
+   * @param [callback] Called when the issues are returned.
+   * @return {Promise} Resolved when the issues are returned.
+   */
+  this.getSprintHealth = function (opts, callback) {
+    var options = {
+      uri: this.jiraClient.buildAgileURL('/gadgets/sprints/health),
+      method: 'GET',
+      json: true,
+      followAllRedirects: true,
+      qs: {
+        rapidViewId: opts.boardId,
+        sprintId: opts.sprintId
+      }
+    };
+
+    return this.jiraClient.makeRequest(options, callback);
+  };
+
   /**
    * Move issues to a sprint, for a given sprint id.
    *
