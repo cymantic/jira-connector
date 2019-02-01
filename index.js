@@ -153,6 +153,7 @@ var JiraClient = module.exports = function (config) {
     this.port = config.port;
     this.apiVersion = 2; // TODO Add support for other versions.
     this.agileApiVersion = '1.0';
+    this.greenhopperApiVersion = '1.0';
     this.authApiVersion = '1';
     this.webhookApiVersion = '1.0';
     this.promise = config.promise || Promise;
@@ -284,6 +285,27 @@ var JiraClient = module.exports = function (config) {
     this.buildAgileURL = function (path) {
         var apiBasePath = this.path_prefix + 'rest/agile/';
         var version = this.agileApiVersion;
+        var requestUrl = url.format({
+            protocol: this.protocol,
+            hostname: this.host,
+            port: this.port,
+            pathname: apiBasePath + version + path
+        });
+
+        return decodeURIComponent(requestUrl);
+    };
+
+    /**
+     * Simple utility to build a REST endpoint URL for the Jira Greenhopper API.
+     *
+     * @method buildGreenhopperURL
+     * @memberOf JiraClient#
+     * @param path The path of the URL without concern for the root of the REST API.
+     * @returns {string} The constructed URL.
+     */
+    this.buildGreenhopperURL = function (path) {
+        var apiBasePath = this.path_prefix + 'rest/greenhopper/';
+        var version = this.greenhopperApiVersion;
         var requestUrl = url.format({
             protocol: this.protocol,
             hostname: this.host,
