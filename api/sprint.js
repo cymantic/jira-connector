@@ -183,7 +183,7 @@ function AgileSprintClient(jiraClient) {
    */
   this.getSprintHealth = function (opts, callback) {
     var options = {
-      uri: this.jiraClient.buildAgileURL('/gadgets/sprints/health),
+      uri: this.jiraClient.buildAgileURL('/gadgets/sprints/health'),
       method: 'GET',
       json: true,
       followAllRedirects: true,
