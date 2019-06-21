@@ -30,7 +30,7 @@ function AuthClient(jiraClient) {
             followAllRedirects: true
         };
 
-        return this.jiraClient.makeRequest(options, callback), 'User logged out.';
+        return this.jiraClient.makeRequest(options, callback, 'User logged out.');
     };
 
     /**
@@ -66,7 +66,7 @@ function AuthClient(jiraClient) {
      */
     this.currentUser = function (callback) {
         var options = {
-            uri: this.jiraClient.buildURL('/session'),
+            uri: this.jiraClient.buildAuthURL('/session'),
             method: 'GET',
             json: true,
             followAllRedirects: true,
