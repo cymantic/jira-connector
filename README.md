@@ -95,9 +95,10 @@ for various API calls.
 
 jira-connector supports two forms of authentication:
 
-### Basic Authentication
+### Basic Authentication (Deprecated)
 
-This is not recommended; it will require you to provide a username and password each time you connect to the
+[Deprecated](https://confluence.atlassian.com/cloud/deprecation-of-basic-authentication-with-passwords-for-jira-and-confluence-apis-972355348.html). It will require you to
+provide a username and password each time you connect to the
 Jira instance. However, jira-connector supports it for users who are unable to use OAuth.
 
 Example:
@@ -114,10 +115,29 @@ var jira = new JiraClient({
 });
 ```
 
+### Basic Authentication With API Token
+
+This is not recommended; it will require you to provide a email and [api_token](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) each time you connect to the
+Jira instance. However, jira-connector supports it for users who are unable to use OAuth.
+
+Example:
+
+```javascript
+var JiraClient = require("jira-connector");
+
+var jira = new JiraClient({
+  host: "jenjinstudios.atlassian.net",
+  basic_auth: {
+    email: "email@email.com",
+    api_token: "api-token"
+  }
+});
+```
+
 ### Basic Authentication (Base64)
 
 Also not recommended, but slightly better than the above; it will require you to provide a Base64 encoded username
-and password (a Base64 encoding in the format of "username:password") each time you connect to the Jira instance.
+and password or email and api_token (a Base64 encoding in the format of "username:password", or "email:api_token") each time you connect to the Jira instance.
 
 More examples [here](https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-basic-authentication).
 
@@ -133,7 +153,7 @@ var jira = new JiraClient({
   }
 });
 
-// Base64 encoding of 'SirUserOfName:Password123'
+// Base64 encoding of 'SirUserOfName:Password123' (for legacy server version) or 'email:api_token' (jira cloud)
 ```
 
 ### OAuth Authentication
@@ -238,7 +258,7 @@ var jira = new JiraClient({
 You can also use a Cookie Jar for your request. It could be an easier way to prompt for a login only once, without the
 pain of setting up an OAuth method.
 
-For example, using `though-cookie-filestore`:
+For example, using `tough-cookie-filestore`:
 
 ```javascript
 var JiraClient = require("jira-connector");
@@ -269,7 +289,7 @@ var jira = new JiraClient({
 ```
 
 In this example, all your cookies are save in a file, `cookies.json`. Currently, the file **MUST** exist, it's a
-limitation from `though-cookie-filestore`...
+limitation from `tough-cookie-filestore`...
 
 You can now only use the Cookie Jar for all the following request, as long as the file exists and the cookie
 is still valid!
@@ -413,6 +433,7 @@ is still valid!
   - getProperty
   - deleteProperty
   - getIssuePicker
+  - getChangelog
 - issueLink (/rest/api/2/issueLink)
   - createIssueLink
   - getIssueLink
@@ -476,6 +497,7 @@ is still valid!
   - getRoles
   - getRole
   - updateRole
+  - updateProject
   - addToRole
 - projectCategory (/rest/api/2/projectCategory)
   - getAllProjectCategories
@@ -550,6 +572,7 @@ is still valid!
   - searchPermissions
   - searchPicker
   - search
+  - all
   - viewIssueSearch
 - version (/rest/api/2/version)
   - createVersion

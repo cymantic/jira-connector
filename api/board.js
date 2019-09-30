@@ -73,7 +73,7 @@ function AgileBoardClient(jiraClient) {
    * Creates a board
    *
    * @method createBoard
-   * @memberOf AgileSprintClient#
+   * @memberOf AgileBoardClient#
    * @param {string} name Must be less than 255 characters.
    * @param {string} type Valid values: scrum, kanban
    * @param {number} filterId ID of a filter that the user has permissions to view. Note, if the
@@ -268,7 +268,11 @@ function AgileBoardClient(jiraClient) {
    * Returns all issues that do not belong to any epic on a board, for a given board ID. This only includes issues that
    * the user has permission to view. Issues returned from this resource include Agile fields, like sprint,
    * closedSprints, flagged, and epic. By default, the returned issues are ordered by rank.
+   * 
+   * @method getIssuesWithoutEpic
+   * @memberOf AgileBoardClient#
    * @param opts
+   * @param {number | string} opts.boardId
    * @param {number} [opts.startAt] The starting index of the returned issues. Base index: 0. See the 'Pagination'
    *      section at the top of this page for more details.
    * @param {number} [opts.maxResults] The maximum number of issues to return per page. Default: 50. See the
@@ -444,6 +448,7 @@ function AgileBoardClient(jiraClient) {
     return this.jiraClient.makeRequest(options, callback);
   };
 
+  // TODO add JsDoc
   this.getBoardPropertyKeys = function (opts, callback) {
     var options = {
       uri: this.jiraClient.buildAgileURL('/board/' + opts.boardId + '/properties'),
@@ -455,6 +460,7 @@ function AgileBoardClient(jiraClient) {
     return this.jiraClient.makeRequest(options, callback);
   }
 
+  // TODO add JsDoc
   this.getBoardProperty = function (opts, callback) {
     var options = {
       uri: this.jiraClient.buildAgileURL('/board/' + opts.boardId + '/properties/' + opts.propertyKey),
@@ -466,17 +472,33 @@ function AgileBoardClient(jiraClient) {
     return this.jiraClient.makeRequest(options, callback);
   }
 
+  /**
+   * Sets the value of the specified board's property. You can use this resource to store a
+   * custom data against the board identified by the id. The user who stores the data is required
+   * to have permissions to modify the board.
+   * 
+   * @method setBoardProperty
+   * @memberof AgileBoardClient
+   * @param {Object} opts
+   * @param {string | number} opts.boardId
+   * @param {string | number} opts.propertyKey
+   * @param {any} opts.property specified board's property.
+   * @param {callback} [callback]
+   * @returns {Promise}
+   */
   this.setBoardProperty = function (opts, callback) {
     var options = {
       uri: this.jiraClient.buildAgileURL('/board/' + opts.boardId + '/properties/' + opts.propertyKey),
       method: 'PUT',
       json: true,
-      followAllRedirects: true
+      followAllRedirects: true,
+      body: opts.property
     };
 
     return this.jiraClient.makeRequest(options, callback);
   }
 
+  // TODO add JsDoc
   this.deleteBoardProperty = function (opts, callback) {
     var options = {
       uri: this.jiraClient.buildAgileURL('/board/' + opts.boardId + '/properties/' + opts.propertyKey),
@@ -488,6 +510,7 @@ function AgileBoardClient(jiraClient) {
     return this.jiraClient.makeRequest(options, callback);
   }
 
+  // TODO add JsDoc
   this.getAllQuickFilters = function (opts, callback) {
     var options = {
       uri: this.jiraClient.buildAgileURL('/board/' + opts.boardId + '/quickfilter'),
@@ -503,6 +526,7 @@ function AgileBoardClient(jiraClient) {
     return this.jiraClient.makeRequest(options, callback);
   }
 
+  // TODO add JsDoc
   this.getQuickFilter = function (opts, callback) {
     var options = {
       uri: this.jiraClient.buildAgileURL('/board/' + opts.boardId + '/quickfilter/' + opts.quickFilterId),

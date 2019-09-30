@@ -16,19 +16,56 @@ function ProjectClient(jiraClient) {
      *
      * @method getAllProjects
      * @memberOf ProjectClient#
-     * @param opts The request options sent to the Jira API.
-     * @param [callback] Called when the projects have been retrieved.
+     * @param {Object} [opts] The request options sent to the Jira API.
+     * @param {string} [opts.expand]
+     * @param {number} [opts.recent]
+     * @param {Array<string>} [opts.properties]
+     * @param {callback} [callback] Called when the projects have been retrieved.
      * @return {Promise} Resolved when the projects have been retrieved.
      */
     this.getAllProjects = function (opts, callback) {
-        var options = this.buildRequestOptions(opts, '', 'GET');
+        opts = opts || {};
+        var options = {
+            uri: this.jiraClient.buildURL('/project', opts.apiVersion),
+            method: 'GET',
+            followAllRedirects: true,
+            json: true,
+            qs: {
+                expand: opts.expand,
+                recent: opts.recent,
+                properties: opts.properties && opts.properties.join(',')
+            }
+        };
 
-        if (!Object.keys(options.body).length) {
-            delete options.body;
-        }
-        if (!Object.keys(options.qs).length) {
-            delete options.qs;
-        }
+        return this.jiraClient.makeRequest(options, callback);
+    };
+
+    this.updateProject = function(opts, callback) {
+        var options = {
+            uri: this.jiraClient.buildURL('/project/' + opts.projectIdOrKey),
+            method: 'PUT',
+            followAllRedirects: true,
+            json: true,
+            qs: {
+                expand: opts.expand
+            },
+            body: {
+                key: opts.key,
+                name: opts.name,
+                projectTypeKey: opts.projectTypeKey,
+                projectTemplateKey: opts.projectTemplateKey,
+                description: opts.description,
+                lead: opts.lead,
+                leadAccountId: opts.leadAccountId,
+                url: opts.url,
+                assigneeType: opts.assigneeType,
+                avatarId: opts.avatarId,
+                issueSecurityScheme: opts.issueSecurityScheme,
+                permissionScheme: opts.permissionScheme,
+                notificationScheme: opts.notificationScheme,
+                categoryId: opts.categoryId
+            }
+        };
 
         return this.jiraClient.makeRequest(options, callback);
     };
@@ -58,6 +95,7 @@ function ProjectClient(jiraClient) {
      * @return {Promise} Resolved when the project has been created.
      */
     this.createProject = function (project, callback) {
+       
         var options = {
             uri: this.jiraClient.buildURL('/project'),
             method: 'POST',

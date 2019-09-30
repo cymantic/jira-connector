@@ -2,6 +2,8 @@ import { Backlog } from './api/backlog';
 import { Board } from './api/board';
 import { Epic } from './api/epic';
 import { Issue } from './api/issue';
+import { Project } from './api/project';
+import { User } from './api/user';
 
 export = JiraClient;
 
@@ -9,11 +11,15 @@ interface IConfig {
     host: string;
     port?: number;
 
+    timeout?: number;
+
     protocol?: string;
     path_prefix?: string;
     strictSSL?: boolean;
     version?: string;
     basic_auth?: {
+        email?: string;
+        api_token?: string;
         username?: string;
         password?: string;
         base64?: string;
@@ -65,7 +71,7 @@ declare class JiraClient {
     public permissions: any;
     public permissionScheme: any;
     public priority: any;
-    public project: any;
+    public project: Project;
     public projectCategory: any;
     public projectValidate: any;
     public reindex: any;
@@ -79,7 +85,7 @@ declare class JiraClient {
     public sprint: any;
     public status: any;
     public statusCategory: any;
-    public user: any;
+    public user: User;
     public version: any;
     public webhook: any;
     public workflow: any;

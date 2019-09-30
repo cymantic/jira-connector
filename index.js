@@ -63,6 +63,13 @@ var workflowScheme = require('./api/workflowScheme');
 var worklog = require('./api/worklog');
 
 /**
+ * @callback callback
+ * @param {any} err 
+ * @param {any} data
+ * @returns {void} 
+ */
+
+/**
  * Represents a client for the Jira REST API
  *
  * @constructor JiraClient
@@ -120,18 +127,24 @@ var worklog = require('./api/worklog');
  *
  * @param config The information needed to access the Jira API
  * @param {string} config.host The hostname of the Jira API.
+ * @param {number} [config.timeout] request timeout (milliseconds)
  * @param {string} [config.protocol=https] The protocol used to accses the Jira API.
  * @param {number} [config.port=443] The port number used to connect to Jira.
  * @param {string} [config.path_prefix="/"] The prefix to use in front of the path, if Jira isn't at "/"
- * @param {boolean} [config.strictSSL=true] 
+ * @param {boolean} [config.strictSSL=true] It is recommended not to turn it off for no reason (https://github.com/request/request/issues/251).
  * @param {string} [config.version=2] The version of the Jira API to which you will be connecting.  Currently, only
  *     version 2 is supported.
  * @param {Object} [config.basic_auth] The authentication information used tp connect to Jira. Must contain EITHER username and password
  *     OR oauth information.  Oauth information will be used over username/password authentication.
- * @param {string} [config.basic_auth.username] The username of the user that will be authenticated. MUST be included
+ * @param {Object} [config.basic_auth.base64] base64 that contains email:api_token.
+ * @param {string} [config.basic_auth.username] (DEPRECATED) The username of the user that will be authenticated. MUST be included
  *     if using username and password authentication.
- * @param {string} [config.basic_auth.password] The password of the user that will be authenticated. MUST be included
+ * @param {string} [config.basic_auth.password] (DEPRECATED) The password of the user that will be authenticated. MUST be included
  *     if using username and password authentication.
+ * @param {string} [config.basic_auth.email] The email of the user that will be authenticated. MUST be included 
+ *     if using email and api_token authentication.
+ * @param {string} [config.basic_auth.api_token] The api token of the user that will be authenticated. MUST be included 
+ *     if using email and api_token authentication.
  * @param {string} [config.oauth.consumer_key] The consumer key used in the Jira Application Link for oauth
  *     authentication.  MUST be included if using OAuth.
  * @param {string} [config.oauth.private_key] The private key used for OAuth security. MUST be included if using OAuth.
@@ -151,11 +164,12 @@ var JiraClient = module.exports = function (config) {
     }
 
     this.host = config.host;
+    this.timeout = config.timeout;
     this.protocol = config.protocol ? config.protocol : 'https';
     this.path_prefix = config.path_prefix ? config.path_prefix : '/';
     this.port = config.port;
     this.apiVersion = 2;
-    this.strictSSL = config.strictSSL || true;
+    this.strictSSL = config.hasOwnProperty('strictSSL') ? config.strictSSL : true;
     this.agileApiVersion = '1.0';
     this.greenhopperApiVersion = '1.0';
     this.authApiVersion = '1';
@@ -183,6 +197,17 @@ var JiraClient = module.exports = function (config) {
             this.basic_auth = {
                 base64: config.basic_auth.base64
             }
+        } else if (config.basic_auth.api_token || config.basic_auth.email) {
+            if (!config.basic_auth.email) {
+                throw new Error(errorStrings.NO_EMAIL_ERROR);
+            } else if (!config.basic_auth.api_token) {
+                throw new Error(errorStrings.NO_APITOKEN_ERROR);
+            }
+
+            this.basic_auth = {
+                user: config.basic_auth.email,
+                pass: config.basic_auth.api_token
+            };
         } else {
             if (!config.basic_auth.username) {
                 throw new Error(errorStrings.NO_USERNAME_ERROR);
@@ -372,7 +397,7 @@ var JiraClient = module.exports = function (config) {
      * @method makeRequest
      * @memberOf JiraClient#
      * @param options The request options.
-     * @param [callback] Called with the APIs response.
+     * @param {callback} [callback] Called with the APIs response.
      * @param {string} [successString] If supplied, this is reported instead of the response body.
      * @return {Promise} Resolved with APIs response or rejected with error
      */
@@ -380,6 +405,7 @@ var JiraClient = module.exports = function (config) {
         let requestLib = this.requestLib;
         options.rejectUnauthorized = this.rejectUnauthorized;
         options.strictSSL = this.strictSSL;
+        options.timeout = this.timeout;
 
         if (this.oauthConfig) {
             options.oauth = this.oauthConfig;
@@ -393,6 +419,7 @@ var JiraClient = module.exports = function (config) {
                 options.auth = this.basic_auth;
             }
         }
+
         if (this.cookie_jar) {
             options.jar = this.cookie_jar;
         }
@@ -400,16 +427,14 @@ var JiraClient = module.exports = function (config) {
         if (callback) {
             requestLib(options, function (err, response, body) {
                 if (
-                    err
-                    || (
-                        response.statusCode.toString()[0] !== "2"
-                        && response.statusCode.toString()[0] !== "3"
-                    )
+                    err ||
+                    response.statusCode < 200 ||
+                    response.statusCode > 399
                 ) {
                     return callback(err ? err : body, null, response);
                 }
 
-                if (typeof body == 'string') {
+                if (typeof body === 'string') {
                     try {
                         body = JSON.parse(body);
                     } catch (jsonErr) {
@@ -421,7 +446,6 @@ var JiraClient = module.exports = function (config) {
             });
         } else if (this.promise) {
             return new this.promise(function (resolve, reject) {
-
                 var req = requestLib(options);
                 var requestObj = null;
 
@@ -430,9 +454,8 @@ var JiraClient = module.exports = function (config) {
                 });
 
                 req.on('response', function (response) {
-
                     // Saving error
-                    var error = response.statusCode.toString()[0] !== '2';
+                    var error = response.statusCode < 200 || response.statusCode > 399;
 
                     // Collecting data
                     var body = [];
@@ -441,7 +464,6 @@ var JiraClient = module.exports = function (config) {
 
                     // Data collected
                     response.on('end', function () {
-
                         var result = body.join('');
 
                         // Parsing JSON
@@ -491,16 +513,12 @@ var JiraClient = module.exports = function (config) {
                             resolve(result);
                         }
                     });
-
                 });
 
                 req.on('error', reject);
-
             });
         }
-
     };
-
 }).call(JiraClient.prototype);
 
 JiraClient.oauth_util = require('./lib/oauth_util');

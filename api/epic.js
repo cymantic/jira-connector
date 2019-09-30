@@ -17,7 +17,7 @@ function AgileEpicClient(jiraClient) {
      * 
      * @method getIssuesWithoutEpic
      * @memberOf AgileEpicClient
-     * @param opts The request options to send to the Jira API
+     * @param { Object } [opts] The request options to send to the Jira API
      * @param { number } [opts.startAt] The index of the first dashboard to return (0-based). must be 0 or a multiple of
      *     maxResults
      * @param { number } [opts.maxResults] A hint as to the the maximum number of dashboards to return in each call. Note that the
@@ -209,15 +209,6 @@ function AgileEpicClient(jiraClient) {
 
         return this.jiraClient.makeRequest(options, callback);
     }
-
-    /**
-     * {
-          epicId: number | string,
-          rankBeforeEpic?: string,
-          rankAfterEpic?: string,
-          rankCustomFieldId?: number
-        }
-     */
 
     /**
      * Moves (ranks) an epic before or after a given epic.
